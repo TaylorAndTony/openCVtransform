@@ -61,11 +61,13 @@ def fix_perspective(img, save=True):
     result = result[:int(p2[1][1] + 1), :int(p2[2][0] + 1)]
     if save:
         cv.imwrite('fixed.png', result)
+        print('fixed.png saved')
     return result
 
 
-def single_image():
-    src = cv.imread('page.jpg')
+def single_image(src='page.jpg'):
+    """ 自动对一张图像进行透视校正 """
+    src = cv.imread(src)
     fix_perspective(src)
 
 
@@ -161,4 +163,5 @@ def stack_loop(nums=5, delay=0.2):
 if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
-    stack_loop(10)
+    # stack_loop(10)
+    single_image('page.jpg')
