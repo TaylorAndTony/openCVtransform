@@ -54,7 +54,11 @@ def fix_perspective(img, save=True):
     p2 = np.array([(0, 0), (0, height), (width, height), (width, 0)],
                   dtype=np.float32)
     # print('目标点：', p2)
-    M = cv.getPerspectiveTransform(p1, p2)  # 变换矩阵
+    try:
+        M = cv.getPerspectiveTransform(p1, p2)  # 变换矩阵
+    except cv.error:
+        print('无法矫正透视')
+        return
     # 使用透视变换
     result = cv.warpPerspective(img_copy, M, (0, 0))
     # 重新截取
@@ -115,7 +119,7 @@ def cam_loop():
     cv.destroyAllWindows()
 
 
-def stack_loop(nums=5, delay=0.2):
+def stack_loop(nums=5, delay=0.2, auto_process=False):
     """
     拍摄堆栈图像
     :param nums: 堆栈次数
@@ -157,11 +161,14 @@ def stack_loop(nums=5, delay=0.2):
             images = []
             cv.imwrite('stacked.png', stacked)
             print('stack operation finished')
+            # 自动处理
+            if auto_process:
+                sleep(0.1)
+                single_image('stacked.png')
     cv.destroyAllWindows()
 
 
 if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
-    # stack_loop(10)
-    single_image('page.jpg')
+    stack_loop(9, 0.3, True)
