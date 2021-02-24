@@ -47,13 +47,9 @@ def fix_perspective(img, save=True):
     LB = p1[1]
     RB = p1[2]
     # 高度 = 开方（（左上纵坐标-左下纵坐标）^2 + （左上横坐标-左下横坐标））
-    height = np.sqrt(
-        (LB[1] - LT[1]) ** 2 + (LB[0] - LT[0]) ** 2
-    )
+    height = np.sqrt((LB[1] - LT[1])**2 + (LB[0] - LT[0])**2)
     # 左下和右下点的距离
-    width = np.sqrt(
-        (LB[1] - RB[1]) ** 2 + (LB[0] - RB[0]) ** 2
-    )
+    width = np.sqrt((LB[1] - RB[1])**2 + (LB[0] - RB[0])**2)
     # 对应四点坐标，左上，左下，右下，右上
     p2 = np.array([(0, 0), (0, height), (width, height), (width, 0)],
                   dtype=np.float32)
@@ -66,6 +62,36 @@ def fix_perspective(img, save=True):
     if save:
         cv.imwrite('fixed.png', result)
     return result
+
+
+def single_image():
+    src = cv.imread('page.jpg')
+    fix_perspective(src)
+
+
+def keyboard_control(key):
+    """ callback func to handel keypress """
+    global RUNNING
+    global ACTIVE
+    try:
+        k = key.char
+    except AttributeError:
+        k = str(key)
+    if k == 's':
+        RUNNING = False
+    elif k == 'a':
+        ACTIVE = True
+
+
+def keyboard_response():
+    """ use threading to begin keyboard listenning """
+    def __t():
+        with keyboard.Listener(on_release=keyboard_control) as listener:
+            listener.join()
+
+    t = Thread(target=__t)
+    t.setDaemon(True)
+    t.start()
 
 
 def cam_loop():
@@ -87,11 +113,14 @@ def cam_loop():
     cv.destroyAllWindows()
 
 
-def stack_loop():
-    """ 拍摄堆栈图像 """
-    # 堆栈 5 张
+def stack_loop(nums=5, delay=0.2):
+    """
+    拍摄堆栈图像
+    :param nums: 堆栈次数
+    :param delay: 每次拍摄的延时
+    """
     global ACTIVE
-    nums = 5
+    # 计数器和图片列表
     current = 0
     images = []
     keyboard_response()
@@ -112,47 +141,24 @@ def stack_loop():
                 current = 0
             # 载入列表
             images.append(original)
-            print('now:', len(images))
+            print(f'progress: {current} / {nums}')
             # 等待
-            sleep(0.2)
+            sleep(delay)
         # 完成连拍
         if len(images) == nums:
             print('finished sampling')
+            # 叠加堆栈
+            # 第一张图像
+            stacked = images[0]
+            for image in images[1:]:
+                cv.addWeighted(stacked, 0.5, image, 0.5, 0, stacked)
             images = []
+            cv.imwrite('stacked.png', stacked)
+            print('stack operation finished')
     cv.destroyAllWindows()
-
-
-def single_image():
-    src = cv.imread('page.jpg')
-    fix_perspective(src)
-
-
-def keyboard_control(key):
-    """ callback func to handel keypress """
-    global RUNNING
-    global ACTIVE
-    try:
-        k = key.char
-    except AttributeError:
-        k = str(key)
-    print(k)
-    if k == 's':
-        RUNNING = False
-    elif k == 'a':
-        ACTIVE = True
-
-
-def keyboard_response():
-    """ use threading to begin keyboard listenning """
-    def __t():
-        with keyboard.Listener(on_release=keyboard_control) as listener:
-            listener.join()
-    t = Thread(target=__t)
-    t.setDaemon(True)
-    t.start()
 
 
 if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
-    stack_loop()
+    stack_loop(10)
