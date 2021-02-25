@@ -115,7 +115,8 @@ def cam_loop():
             print('triggered')
             cv.imwrite('cap.png', original)
             print('Done')
-            sleep(0.1)
+            sleep(0.2)
+            single_image('cap.png')
     cv.destroyAllWindows()
 
 
@@ -142,12 +143,13 @@ def stack_loop(nums=5, delay=0.2, auto_process=False):
         if ACTIVE:
             # 连拍控制
             current += 1
+            # print(f'progress: {current} / {nums}')
             if current >= nums:
                 ACTIVE = False
                 current = 0
             # 载入列表
             images.append(original)
-            print(f'progress: {current} / {nums}')
+            print(f'{len(images)} images loaded')
             # 等待
             sleep(delay)
         # 完成连拍
@@ -171,4 +173,6 @@ def stack_loop(nums=5, delay=0.2, auto_process=False):
 if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
-    stack_loop(9, 0.3, True)
+    # stack_loop(15, 0.02, True)
+    cam_loop()
+    # single_image('cap.png')
