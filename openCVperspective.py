@@ -19,7 +19,7 @@ def contour_demo(img):
     return contours
 
 
-def fix_perspective(img, save=True):
+def fix_perspective(img, save=True, out_name='./output/fixed'):
     """ 对图像进行自动透视修正 """
     contours = contour_demo(img)
     # 轮廓唯一，以后可以扩展
@@ -64,15 +64,15 @@ def fix_perspective(img, save=True):
     # 重新截取
     result = result[:int(p2[1][1] + 1), :int(p2[2][0] + 1)]
     if save:
-        cv.imwrite('fixed.png', result)
-        print('fixed.png saved')
+        cv.imwrite(f'{out_name}.png', result)
+        print(f'{out_name}.png saved')
     return result
 
 
-def single_image(src='page.jpg'):
+def single_image(src='page.jpg', out_name='./output/fixed'):
     """ 自动对一张图像进行透视校正 """
     src = cv.imread(src)
-    fix_perspective(src)
+    fix_perspective(src, out_name=out_name)
 
 
 def keyboard_control(key):
@@ -104,7 +104,7 @@ def cam_loop():
     """ 摄像头采集 """
     global ACTIVE
     keyboard_response()
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(0, cv.CAP_DSHOW)
     while RUNNING:
         _, original = cam.read()
         cv.imshow('result', original)
@@ -113,10 +113,10 @@ def cam_loop():
         if ACTIVE:
             ACTIVE = False
             print('triggered')
-            cv.imwrite('cap.png', original)
+            cv.imwrite('./output/cap.png', original)
             print('Done')
             sleep(0.2)
-            single_image('cap.png')
+            single_image('./output/cap.png')
     cv.destroyAllWindows()
 
 
@@ -131,7 +131,7 @@ def stack_loop(nums=5, delay=0.2, auto_process=False):
     current = 0
     images = []
     keyboard_response()
-    cam = cv.VideoCapture(0)
+    cam = cv.VideoCapture(0, cv.CAP_DSHOW)
     while RUNNING:
         _, original = cam.read()
         # 展示窗口
@@ -161,12 +161,38 @@ def stack_loop(nums=5, delay=0.2, auto_process=False):
             for image in images[1:]:
                 cv.addWeighted(stacked, 0.5, image, 0.5, 0, stacked)
             images = []
-            cv.imwrite('stacked.png', stacked)
+            cv.imwrite('./output/stacked.png', stacked)
             print('stack operation finished')
             # 自动处理
             if auto_process:
                 sleep(0.1)
-                single_image('stacked.png')
+                single_image('./output/stacked.png')
+    cv.destroyAllWindows()
+
+
+def continual_loop(name='auto'):
+    """ 连续自动命名，拍摄一张图片并进行透视校正 """
+    global ACTIVE
+    keyboard_response()
+    cam = cv.VideoCapture(0, cv.CAP_DSHOW)
+    num = 0
+    while True:
+        _, original = cam.read()
+        # 展示窗口
+        cv.imshow('result', original)
+        # 退出程序判断
+        if cv.waitKey(1) & 0xFF == ord('q'):
+            break
+        # 激活程序判断
+        if ACTIVE:
+            ACTIVE = False
+            num += 1
+            print('automated operation triggered')
+            cv.imwrite(f'./output/{name}-{num}-origin.png', original)
+            print('Done')
+            sleep(0.2)
+            single_image(f'./output/{name}-{num}-origin.png',
+                         f'./output/{name}-{num}-fixed')
     cv.destroyAllWindows()
 
 
@@ -174,5 +200,5 @@ if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
     # stack_loop(15, 0.02, True)
-    cam_loop()
+    continual_loop()
     # single_image('cap.png')
