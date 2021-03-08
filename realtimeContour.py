@@ -144,6 +144,17 @@ class ImageProcessor:
         t.setDaemon(True)
         t.start()
 
+    def local_threshold(self, image, out_file_name, open=False):
+        """ 局部阈值二值化 """
+        if open:
+            image0 = cv2.imread(image)
+        else:
+            image0 = image
+        gray = cv2.cvtColor(image0, cv2.COLOR_BGRA2GRAY)
+        binary = cv2.adaptiveThreshold(
+            gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 25, 10)
+        cv2.imwrite('./output/' + out_file_name + '.png', binary)
+
     def manual(self, input_image):
         """ 自动打开图片，识别透视并保存 """
         path = input_image
@@ -177,7 +188,8 @@ class ImageProcessor:
                     fixed = fix_perspective(original, points)
                     # 检测能不能修复
                     if fixed is not None:
-                        cv2.imwrite(f'./output/{self.filename}-fixed.png', fixed)
+                        cv2.imwrite(
+                            f'./output/{self.filename}-fixed.png', fixed)
                         print('已保存')
                     else:
                         print('无法保存')
@@ -192,4 +204,4 @@ class ImageProcessor:
 if __name__ == '__main__':
     processer = ImageProcessor('camera')
     # processer.manual('paper.jpg')
-    processer.cam_loop()
+    processer.local_threshold('./output/perspective_fix.png', 'erzhihua', True)
