@@ -199,6 +199,6 @@ def continual_loop(name='auto'):
 if __name__ == '__main__':
     RUNNING = True
     ACTIVE = False
-    # stack_loop(15, 0.02, True)
-    continual_loop()
+    stack_loop(15, 0.02, False)
+    # continual_loop()
     # single_image('cap.png')
